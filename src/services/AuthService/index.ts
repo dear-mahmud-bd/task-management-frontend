@@ -14,7 +14,7 @@ export const loginUser = async (userData: FieldValues) => {
       body: JSON.stringify(userData),
     });
     const result = await res.json();
-    console.log(result);
+    // console.log(result);
 
     if (result?.status) {
       (await cookies()).set("token", result?.token);
@@ -33,12 +33,11 @@ export const logout = async () => {
 
 export const getCurrentUser = async () => {
   const accessToken = (await cookies()).get("token")?.value;
-  console.log(accessToken);
-  
+  // console.log(accessToken);
   let decodedData = null;
   if (accessToken) {
     decodedData = await jwtDecode(accessToken);
-    console.log(decodedData);
+    // console.log(decodedData);
     return decodedData;
   } else {
     return null;

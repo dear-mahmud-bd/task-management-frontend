@@ -11,6 +11,8 @@ import { useUser } from "@/context/UserContext";
 import { loginUser } from "@/services/AuthService";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAppDispatch } from "@/redux/hooks";
+import { setUser } from "@/redux/features/authSlice";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,8 @@ export default function Login() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirectPath");
   const router = useRouter();
+
+  const dispatch = useAppDispatch();
 
   const {
     register,
@@ -29,12 +33,19 @@ export default function Login() {
   });
 
   const onSubmit = async (data: LoginSchema) => {
-    console.log(data);
+    // console.log(data);
     try {
       const res = await loginUser(data);
+      const currentUser = {
+        id: res.user._id,
+        email: res.user.email,
+        role: res.user.role,
+      };
+      console.log("Redux- ", currentUser);
       setLoading(true);
       setIsLoading(true);
       if (res?.status) {
+        dispatch(setUser({ user: currentUser, token: res?.token }));
         toast.success("Login Successfully");
         if (redirect) {
           router.push(redirect);
@@ -45,7 +56,7 @@ export default function Login() {
         toast.error("Something Wrong!");
       }
       setLoading(false);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
     }

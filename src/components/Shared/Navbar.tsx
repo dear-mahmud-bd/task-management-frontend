@@ -2,6 +2,8 @@
 
 import { protectedRoutes } from "@/constants";
 import { useUser } from "@/context/UserContext";
+import { signOut } from "@/redux/features/authSlice";
+import { useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/services/AuthService";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
@@ -11,13 +13,16 @@ const Navbar = () => {
   console.log(user);
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const handleLogOut = () => {
     logout();
     setIsLoading(true);
+    dispatch(signOut());
     if (protectedRoutes.some((route) => pathname.match(route))) {
       router.push("/");
     }
+    router.push("/");
   };
 
   return (
