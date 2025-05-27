@@ -38,6 +38,7 @@ export default function Login() {
       const res = await loginUser(data);
       const currentUser = {
         id: res.user._id,
+        name: res.user.name,
         email: res.user.email,
         role: res.user.role,
       };

@@ -2,18 +2,56 @@
 
 import { protectedRoutes } from "@/constants";
 import { useUser } from "@/context/UserContext";
-import { signOut } from "@/redux/features/authSlice";
-import { useAppDispatch } from "@/redux/hooks";
+import { selectCurrentUser, signOut } from "@/redux/features/authSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/services/AuthService";
+import { getInitials } from "@/utils";
 import { usePathname, useRouter } from "next/navigation";
-import React from "react";
+import { useState } from "react";
+import { IoIosNotificationsOutline } from "react-icons/io";
+import moment from "moment";
 
+const mockNotifications = [
+  {
+    id: 1,
+    type: "alert",
+    text: "Server CPU usage is high.",
+    createdAt: new Date(),
+    read: false,
+  },
+  {
+    id: 2,
+    type: "message",
+    text: "You have a new message from Alice.",
+    createdAt: new Date(Date.now() - 1000 * 60 * 5),
+    read: false,
+  },
+  {
+    id: 3,
+    type: "alert",
+    text: "New team member joined your project.",
+    createdAt: new Date(Date.now() - 1000 * 60 * 60),
+    read: true,
+  },
+];
 const Navbar = () => {
   const { user, setIsLoading } = useUser();
   console.log(user);
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const savedUser = useAppSelector(selectCurrentUser);
+  // console.log(savedUser.name);
+
+  const [notifications, setNotifications] = useState(mockNotifications);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAllRead = () => {
+    setNotifications((prev) =>
+      prev.map((n) => ({ ...n, read: true }))
+    );
+  };
 
   const handleLogOut = () => {
     logout();
@@ -61,10 +99,109 @@ const Navbar = () => {
             </li>
           </ul>
         </div>
-        <div className="navbar-end">
-          <a className="btn" onClick={handleLogOut}>
-            Log Out
-          </a>
+
+        <div className="navbar-end mr-2">
+          <div className="flex-none space-x-2">
+            {/* Notification section */}
+            <div className="dropdown dropdown-end">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-ghost btn-circle"
+              >
+                <div className="indicator">
+                  <IoIosNotificationsOutline className="h-6 w-6" />
+                  {unreadCount > 0 && (
+                    <span className="badge badge-xs badge-error indicator-item">
+                      {unreadCount}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div
+                tabIndex={0}
+                className="mt-3 z-[100] card card-compact dropdown-content w-80 bg-base-100 shadow"
+              >
+                <div className="card-body">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-lg">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <button
+                        className="btn btn-xs btn-outline btn-warning"
+                        onClick={markAllRead}
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <ul className="mt-2 space-y-2 max-h-64 overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map((n) => (
+                        <li
+                          key={n.id}
+                          className={`p-3 rounded-lg ${
+                            !n.read
+                              ? "bg-info bg-opacity-10"
+                              : "hover:bg-base-200"
+                          }`}
+                        >
+                          <div className="text-sm font-medium capitalize">
+                            {n.type}
+                          </div>
+                          <div className="text-sm text-gray-600 line-clamp-1">
+                            {n.text}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {moment(n.createdAt).fromNow()}
+                          </div>
+                        </li>
+                      ))
+                    ) : (
+                      <p className="text-center text-sm text-gray-500">
+                        No notifications
+                      </p>
+                    )}
+                  </ul>
+                  <div className="card-actions mt-3">
+                    <button className="btn btn-primary btn-block">
+                      View all
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Profile Section */}
+            <div className="dropdown dropdown-end">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-ghost btn-circle"
+              >
+                <div className="ring-blue-600 ring-offset-base-100 w-10 h-10 rounded-full ring-2 ring-offset-2 flex items-center justify-center">
+                  <span className="text-blue-500 font-bold">
+                    {getInitials(savedUser?.name as string)}
+                  </span>
+                </div>
+              </div>
+              <ul
+                tabIndex={0}
+                className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
+              >
+                <li>
+                  <a className="justify-between">
+                    Profile
+                    <span className="badge">New</span>
+                  </a>
+                </li>
+                <li>
+                  <a>Settings</a>
+                </li>
+                <li>
+                  <a onClick={handleLogOut}>Logout</a>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>

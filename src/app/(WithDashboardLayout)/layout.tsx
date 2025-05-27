@@ -1,8 +1,13 @@
+"use client";
+
 import Navbar from "@/components/Shared/Navbar";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React from "react";
+import clsx from "clsx";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+  const pathname = usePathname();
   return (
     <div className="container max-w-full mx-auto">
       <Navbar></Navbar>
@@ -16,13 +21,34 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           <label htmlFor="my-drawer-2" className="drawer-overlay"></label>
           <ul className="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
             <li>
-              <Link href="/dashboard">dashboard</Link>
+              <Link
+                href="/dashboard"
+                className={clsx({
+                  "bg-primary text-white": pathname === "/dashboard",
+                })}
+              >
+                Dashboard
+              </Link>
             </li>
             <li>
-              <Link href="/dashboard/task">Task</Link>
+              <Link
+                href="/dashboard/task"
+                className={clsx({
+                  "bg-primary text-white": pathname === "/dashboard/task",
+                })}
+              >
+                Task
+              </Link>
             </li>
             <li>
-              <Link href="/dashboard/team">Team</Link>
+              <Link
+                href="/dashboard/team"
+                className={clsx({
+                  "bg-primary text-white": pathname === "/dashboard/team",
+                })}
+              >
+                Team
+              </Link>
             </li>
           </ul>
         </div>
