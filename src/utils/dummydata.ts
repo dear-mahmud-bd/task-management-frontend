@@ -24,6 +24,12 @@ export const tasks = [
         date: new Date("2023-01-15").toISOString(),
         tag: "Coding",
       },
+      {
+        _id: "task3",
+        title: "Blog App Dashboard",
+        date: new Date("2023-01-15").toISOString(),
+        tag: "Coding",
+      },
     ],
   },
   {
@@ -37,6 +43,7 @@ export const tasks = [
     team: [
       { _id: "user3", name: "Bob Smith" },
       { _id: "user4", name: "Alice Johnson" },
+      { _id: "user14", name: "Kew Akjon" },
     ],
     subTasks: [
       {

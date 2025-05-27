@@ -4,3 +4,8 @@ export function getInitials(fullName: string) {
   const initialsStr = initials.join("");
   return initialsStr;
 }
+
+export const getCompletedSubTasks = (subTasks?: { completed: boolean }[]) => {
+  if (!subTasks || !Array.isArray(subTasks)) return 0;
+  return subTasks.filter((task) => task.completed).length;
+};
