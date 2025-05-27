@@ -112,7 +112,7 @@ const Navbar = () => {
                 <div className="indicator">
                   <IoIosNotificationsOutline className="h-6 w-6" />
                   {unreadCount > 0 && (
-                    <span className="badge badge-xs badge-error indicator-item">
+                    <span className="badge badge-xs badge-error text-white indicator-item">
                       {unreadCount}
                     </span>
                   )}
