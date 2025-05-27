@@ -1,21 +1,54 @@
-// app/page.tsx or pages/index.tsx depending on your Next.js structure
-
 "use client";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import {
+  loginSchema,
+  LoginSchema,
+} from "@/components/Module/auth/loginValidation";
+import { useUser } from "@/context/UserContext";
+import { loginUser } from "@/services/AuthService";
+import { toast } from "sonner";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function Home() {
-  const [isLoading, setIsLoading] = useState(false);
+export default function Login() {
+  const [loading, setLoading] = useState(false);
+  const { setIsLoading } = useUser();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirectPath");
+  const router = useRouter();
 
-    // Simulate login delay
-    setTimeout(() => {
-      alert("Login clicked!");
-      setIsLoading(false);
-    }, 1500);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginSchema) => {
+    console.log(data);
+    try {
+      const res = await loginUser(data);
+      setLoading(true);
+      setIsLoading(true);
+      if (res?.status) {
+        toast.success("Login Successfully");
+        if (redirect) {
+          router.push(redirect);
+        } else {
+          router.push("/dashboard");
+        }
+      } else {
+        toast.error("Something Wrong!");
+      }
+      setLoading(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error(err);
+    }
   };
 
   return (
@@ -38,7 +71,7 @@ export default function Home() {
         {/* Login Form Section */}
         <div className="w-full md:w-1/3 p-4 flex flex-col justify-center items-center">
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="card w-full md:w-[400px] bg-white dark:bg-slate-900 shadow-xl p-10 space-y-6"
           >
             <div>
@@ -57,9 +90,16 @@ export default function Home() {
               <input
                 type="email"
                 placeholder="you@example.com"
-                className="input input-bordered w-full"
-                required
+                className={`input input-bordered w-full ${
+                  errors.email ? "input-error" : ""
+                }`}
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div className="form-control w-full">
@@ -69,9 +109,16 @@ export default function Home() {
               <input
                 type="password"
                 placeholder="••••••••"
-                className="input input-bordered w-full"
-                required
+                className={`input input-bordered w-full ${
+                  errors.password ? "input-error" : ""
+                }`}
+                {...register("password")}
               />
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.password.message}
+                </p>
+              )}
               <label className="label">
                 <span className="label-text-alt text-blue-600 hover:underline cursor-pointer">
                   Forgot password?
@@ -82,9 +129,9 @@ export default function Home() {
             <button
               type="submit"
               className="btn btn-primary w-full rounded-full"
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? (
+              {loading ? (
                 <span className="loading loading-spinner"></span>
               ) : (
                 "Log in"
