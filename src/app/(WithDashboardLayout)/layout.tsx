@@ -50,6 +50,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 Team
               </Link>
             </li>
+            <li>
+              <Link
+                href="/dashboard/trash"
+                className={clsx({
+                  "bg-primary text-white": pathname === "/dashboard/trash",
+                })}
+              >
+                Trash
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
