@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -17,6 +16,9 @@ import { getInitials } from "@/utils";
 import { format } from "date-fns";
 import TaskColor from "./TaskColor";
 import { BiTrash } from "react-icons/bi";
+import Link from "next/link";
+import SubTaskModal from "./SubTaskModal";
+import EditTaskModal from "./EditTaskModal";
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -39,6 +41,8 @@ export const TASK_TYPE = {
 export default function TaskCard({ task }: { task: any }) {
   const [open, setOpen] = useState(false);
 
+  const [selectedTask, setSelectedTask] = useState(task);
+
   return (
     <>
       <div className="bg-white dark:bg-[#1f1f1f] rounded shadow p-4">
@@ -59,9 +63,15 @@ export default function TaskCard({ task }: { task: any }) {
 
         <div className="flex items-center gap-2 mb-1">
           <TaskColor className={TASK_TYPE[task?.stage as StageType]} />
-          <h4 className="text-lg font-semibold text-gray-800 dark:text-white line-clamp-1">
-            {task?.title}
-          </h4>
+          <Link
+            href={`/dashboard/task/abc`}
+            className="tooltip tooltip-right"
+            data-tip="Open task details..."
+          >
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white line-clamp-1">
+              {task?.title}
+            </h4>
+          </Link>
         </div>
         <p className="text-sm text-gray-500 mb-2">
           {/* {formatDate(new Date(task?.date))} */}
@@ -121,22 +131,35 @@ export default function TaskCard({ task }: { task: any }) {
         <div className="flex flex-col gap-2 w-full">
           {/* Add Subtask */}
           <button
-            onClick={() => setOpen(true)}
+            onClick={() => (document.getElementById("subtask_modal") as HTMLDialogElement | null)?.showModal()}
             className="btn btn-sm btn-outline flex items-center gap-2 text-gray-600  text-center"
           >
             <IoMdAdd className="text-lg" />
             Add Subtask
           </button>
+          <SubTaskModal
+            open={open}
+            setOpen={setOpen}
+            onSubmit={(subtask) => console.log("New Subtask:", subtask)}
+          />
 
           <div className="flex justify-between">
             {/* Edit Button */}
             <button
-              onClick={() => console.log("Edit clicked")}
+              onClick={() => (document.getElementById("edit_task_modal") as HTMLDialogElement | null)?.showModal()}
               className="btn btn-sm btn-outline flex items-center gap-2 text-blue-600 justify-start"
             >
               <MdOutlineEdit className="text-lg" />
               Edit
             </button>
+
+            <EditTaskModal
+              task={selectedTask}
+              onSave={(updatedTask) => {
+                console.log("Updated Task:", updatedTask);
+                setSelectedTask(updatedTask);
+              }}
+            />
 
             {/* Delete Button */}
             <button
@@ -150,7 +173,8 @@ export default function TaskCard({ task }: { task: any }) {
         </div>
       </div>
 
-      {/* <AddSubTask open={open} setOpen={setOpen} id={task._id} /> */}
+      {/* add subtask modal (only sub-task title and tag input field)  */}
+      {/* add edit modal (same as AddTaskModal also show info) */}
     </>
   );
 }

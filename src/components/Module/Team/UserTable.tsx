@@ -1,11 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { IoMdAdd } from "react-icons/io";
 import { MdOutlineEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import clsx from "clsx";
 import { dummyTeamUsers } from "@/utils/dummydata";
+import { useForm } from "react-hook-form";
+
+type UserFormData = {
+  name: string;
+  title: string;
+  email: string;
+  role: "Developer" | "Admin";
+};
 
 const dummyUsers = dummyTeamUsers;
 
@@ -18,15 +27,103 @@ const getInitials = (name: string) => {
 };
 
 const UserTable = () => {
+  const [users, setUsers] = useState<UserFormData[]>([]);
+  const { register, handleSubmit, reset } = useForm<UserFormData>();
+
+  const openModal = () => {
+    const modal = document.getElementById(
+      "add_user_modal"
+    ) as HTMLDialogElement | null;
+    modal?.showModal();
+  };
+
+  const onSubmit = (data: UserFormData) => {
+    console.log(data);
+
+    setUsers((prev) => [...prev, data]);
+    reset();
+    const modal = document.getElementById(
+      "add_user_modal"
+    ) as HTMLDialogElement | null;
+    modal?.close();
+  };
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Team Members</h2>
-        <button className="btn btn-primary btn-sm">
+        <button className="btn btn-primary btn-sm" onClick={openModal}>
           <IoMdAdd className="text-lg" />
           Add New User
         </button>
       </div>
+      <dialog
+        id="add_user_modal"
+        className="modal modal-bottom sm:modal-middle"
+      >
+        <div className="modal-box">
+          <h3 className="font-bold text-lg mb-4">Add New User</h3>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
+            <div>
+              <label className="label">
+                <span className="label-text">Full Name</span>
+              </label>
+              <input
+                {...register("name", { required: true })}
+                type="text"
+                placeholder="Name"
+                className="input input-bordered w-full"
+              />
+            </div>
+            <div>
+              <label className="label">
+                <span className="label-text">Job Title</span>
+              </label>
+              <input
+                {...register("title", { required: true })}
+                type="text"
+                placeholder="Title"
+                className="input input-bordered w-full"
+              />
+            </div>
+            <div>
+              <label className="label">
+                <span className="label-text">Email</span>
+              </label>
+              <input
+                {...register("email", { required: true })}
+                type="email"
+                placeholder="Email"
+                className="input input-bordered w-full"
+              />
+            </div>
+            <div>
+              <label className="label">
+                <span className="label-text">User Role</span>
+              </label>
+              <select
+                {...register("role", { required: true })}
+                className="select select-bordered w-full"
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Select Role
+                </option>
+                <option value="developer">Developer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div className="modal-action">
+              <form method="dialog">
+                <button className="btn btn-sm">Cancel</button>
+              </form>
+              <button type="submit" className="btn btn-primary btn-sm">
+                Add User
+              </button>
+            </div>
+          </form>
+        </div>
+      </dialog>
 
       <div className="overflow-x-auto bg-white rounded shadow">
         <table className="table w-full">
