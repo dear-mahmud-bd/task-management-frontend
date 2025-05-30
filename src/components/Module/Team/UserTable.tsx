@@ -1,43 +1,59 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IoMdAdd } from "react-icons/io";
 import { MdOutlineEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import clsx from "clsx";
-import { dummyTeamUsers } from "@/utils/dummydata";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { registerUser } from "@/services/AuthService";
+import { getInitials } from "@/utils";
+import { fetchAllUsers, updateUserProfile } from "@/services/User";
+import { useAppSelector } from "@/redux/hooks";
+import { useCurrentToken } from "@/redux/features/authSlice";
+import { StatusToggleModal } from "./StatusToggleModal";
 
 type UserFormData = {
+  _id: string;
   name: string;
   title: string;
   email: string;
-  role: "Developer" | "Admin";
-};
-
-const dummyUsers = dummyTeamUsers;
-
-const getInitials = (name: string) => {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
+  isActive: boolean;
+  role: "developer" | "admin";
 };
 
 const UserTable = () => {
-  const [users, setUsers] = useState<UserFormData[]>([]);
   const { register, handleSubmit, reset } = useForm<UserFormData>();
-
+  const [editingUser, setEditingUser] = useState<UserFormData | null>(null);
   const openModal = () => {
     const modal = document.getElementById(
       "add_user_modal"
     ) as HTMLDialogElement | null;
     modal?.showModal();
   };
+
+  const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState([]);
+  const token = useAppSelector(useCurrentToken);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchAllUsers(token as string);
+        setUsers(data);
+      } catch (error) {
+        toast.error("Failed to load users");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [token]);
+  // console.log(users);
 
   const onSubmit = async (data: UserFormData) => {
     // console.log(data);
@@ -71,6 +87,46 @@ const UserTable = () => {
     ) as HTMLDialogElement | null;
     modal?.close();
   };
+
+  // edit user details
+  const handleEditUser = (user: UserFormData) => {
+    setEditingUser(user);
+    reset(user); // prefill form with selected user data
+    const modal = document.getElementById(
+      "edit_user_modal"
+    ) as HTMLDialogElement;
+    modal?.showModal();
+  };
+  const onEditSubmit = async (data: UserFormData) => {
+    try {
+      // Send PUT/PATCH request to update user
+      const updatedData = {
+        _id: data._id,
+        name: data.name,
+        title: data.title,
+        role: data.role,
+      };
+      // console.log("Edited data:", updatedData);
+
+      // TODO: Replace with your updateUser service call
+      const res = await updateUserProfile(token as string, updatedData);
+      // console.log("update - ", res);
+      if (res.status) {
+        toast.success("User updated successfully");
+      } else {
+        toast.error("Update failed");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Update failed");
+    } finally {
+      setEditingUser(null);
+      (
+        document.getElementById("edit_user_modal") as HTMLDialogElement
+      )?.close();
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -172,7 +228,7 @@ const UserTable = () => {
             </tr>
           </thead>
           <tbody>
-            {dummyUsers.map((user) => (
+            {users.map((user: UserFormData) => (
               <tr key={user._id} className="hover">
                 <td>
                   <div className="flex items-center gap-3">
@@ -181,11 +237,6 @@ const UserTable = () => {
                         {getInitials(user.name)}
                       </div>
                     </div>
-                    {/* <div className="ring-blue-600 ring-offset-base-100 w-10 h-10 rounded-full ring-2 ring-offset-2 flex items-center justify-center">
-                      <span className="text-blue-500 font-bold">
-                        {getInitials(user?.name as string)}
-                      </span>
-                    </div> */}
                     {user.name}
                   </div>
                 </td>
@@ -193,32 +244,112 @@ const UserTable = () => {
                 <td>{user.email}</td>
                 <td>{user.role}</td>
                 <td>
-                  <span
-                    className={clsx(
-                      "px-3 py-1 rounded-full text-xs font-semibold",
-                      user.isActive
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    )}
-                  >
-                    {user.isActive ? "Active" : "Disabled"}
-                  </span>
+                  <StatusToggleModal
+                  userId={user._id}
+                  isActive={user.isActive}
+                  token={token as string}
+                  role={user.role}
+                />
+                
                 </td>
                 <td className="text-right space-x-2">
-                  <button className="btn btn-sm btn-outline text-blue-600">
+                  <button
+                    className="btn btn-sm btn-outline text-blue-600"
+                    onClick={() => handleEditUser(user)}
+                  >
                     <MdOutlineEdit className="text-lg" />
                     Edit
                   </button>
-                  <button className="btn btn-sm btn-outline text-red-600">
+
+                  {/* <button className="btn btn-sm btn-outline text-red-600">
                     <RiDeleteBin6Line className="text-lg" />
                     Delete
-                  </button>
+                  </button> */}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      <dialog
+        id="edit_user_modal"
+        className="modal modal-bottom sm:modal-middle"
+      >
+        <div className="modal-box">
+          <h3 className="font-bold text-lg mb-4">Edit User</h3>
+          <form
+            onSubmit={handleSubmit((data) => onEditSubmit(data))}
+            className="space-y-1"
+          >
+            <div>
+              <label className="label">
+                <span className="label-text">Full Name</span>
+              </label>
+              <input
+                {...register("name", { required: true })}
+                type="text"
+                placeholder="Name"
+                className="input input-bordered w-full"
+              />
+            </div>
+            <div>
+              <label className="label">
+                <span className="label-text">Job Title</span>
+              </label>
+              <input
+                {...register("title", { required: true })}
+                type="text"
+                placeholder="Title"
+                className="input input-bordered w-full"
+              />
+            </div>
+            <div>
+              <label className="label">
+                <span className="label-text">Email</span>
+              </label>
+              <input
+                {...register("email", { required: true })}
+                type="email"
+                placeholder="Email"
+                className="input input-bordered w-full"
+                disabled // prevent editing email
+              />
+            </div>
+            <div>
+              <label className="label">
+                <span className="label-text">User Role</span>
+              </label>
+              <select
+                {...register("role", { required: true })}
+                className="select select-bordered w-full"
+                disabled={editingUser?.role === "admin"}
+              >
+                <option value="developer">Developer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div className="modal-action">
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() =>
+                  (
+                    document.getElementById(
+                      "edit_user_modal"
+                    ) as HTMLDialogElement
+                  )?.close()
+                }
+              >
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary btn-sm">
+                Update User
+              </button>
+            </div>
+          </form>
+        </div>
+      </dialog>
     </div>
   );
 };
