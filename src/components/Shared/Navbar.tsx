@@ -4,7 +4,7 @@ import { protectedRoutes } from "@/constants";
 import { useUser } from "@/context/UserContext";
 import { selectCurrentUser, signOut } from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { logout } from "@/services/AuthService";
+import { logoutUser } from "@/services/AuthService";
 import { getInitials } from "@/utils";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -54,9 +54,9 @@ const Navbar = () => {
   };
 
   const handleLogOut = () => {
-    logout();
-    setIsLoading(true);
     dispatch(signOut());
+    logoutUser();
+    setIsLoading(true);
     if (protectedRoutes.some((route) => pathname.match(route))) {
       router.push("/");
     }

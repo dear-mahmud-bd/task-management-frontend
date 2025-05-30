@@ -8,6 +8,8 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import clsx from "clsx";
 import { dummyTeamUsers } from "@/utils/dummydata";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { registerUser } from "@/services/AuthService";
 
 type UserFormData = {
   name: string;
@@ -37,10 +39,32 @@ const UserTable = () => {
     modal?.showModal();
   };
 
-  const onSubmit = (data: UserFormData) => {
-    console.log(data);
+  const onSubmit = async (data: UserFormData) => {
+    // console.log(data);
+    const userData = {
+      name: data.name,
+      title: data.title,
+      role: data.role,
+      email: data.email,
+      password: data.email,
+    };
+    try {
+      const res = await registerUser(userData);
+      console.log(res);
+      if (res?.statusCode === 400) {
+        toast.error(res.message);
+      } else {
+        if (res?.role) {
+          toast.success("User Adder Successfully!");
+        } else {
+          toast.error("Something Wrong!");
+        }
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error(err);
+    }
 
-    setUsers((prev) => [...prev, data]);
     reset();
     const modal = document.getElementById(
       "add_user_modal"
@@ -114,9 +138,19 @@ const UserTable = () => {
             </div>
 
             <div className="modal-action">
-              <form method="dialog">
-                <button className="btn btn-sm">Cancel</button>
-              </form>
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() =>
+                  (
+                    document.getElementById(
+                      "add_user_modal"
+                    ) as HTMLDialogElement
+                  )?.close()
+                }
+              >
+                Cancel
+              </button>
               <button type="submit" className="btn btn-primary btn-sm">
                 Add User
               </button>

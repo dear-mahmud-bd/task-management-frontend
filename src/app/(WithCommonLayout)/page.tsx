@@ -2,17 +2,23 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   loginSchema,
   LoginSchema,
 } from "@/components/Module/auth/loginValidation";
 import { useUser } from "@/context/UserContext";
-import { loginUser } from "@/services/AuthService";
+import { loginUser, logout, setTokenFromRedux } from "@/services/AuthService";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAppDispatch } from "@/redux/hooks";
-import { setUser } from "@/redux/features/authSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import {
+  selectCurrentUser,
+  setUser,
+  signOut,
+  useCurrentToken,
+} from "@/redux/features/authSlice";
+import { isTokenValid } from "@/utils/tokenChq";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -23,6 +29,22 @@ export default function Login() {
   const router = useRouter();
 
   const dispatch = useAppDispatch();
+  const savedUser = useAppSelector(selectCurrentUser);
+  const currentToken = useAppSelector(useCurrentToken);
+
+  console.log("Login Page- ", savedUser);
+  console.log("Login Page- ", currentToken);
+
+  useEffect(() => {
+    if (currentToken && isTokenValid(currentToken)) {
+      setTokenFromRedux(currentToken).then(() => {
+        window.location.href = "/dashboard";
+      });
+    } else {
+      logout(); // Clear cookie
+      dispatch(signOut()); // Clear Redux + localStorage
+    }
+  }, [currentToken, dispatch, router]);
 
   const {
     register,
@@ -36,27 +58,32 @@ export default function Login() {
     // console.log(data);
     try {
       const res = await loginUser(data);
-      const currentUser = {
-        id: res.user._id,
-        name: res.user.name,
-        email: res.user.email,
-        role: res.user.role,
-      };
-      console.log("Redux- ", currentUser);
-      setLoading(true);
-      setIsLoading(true);
-      if (res?.status) {
-        dispatch(setUser({ user: currentUser, token: res?.token }));
-        toast.success("Login Successfully");
-        if (redirect) {
-          router.push(redirect);
-        } else {
-          router.push("/dashboard");
-        }
+      if (!res?.status) {
+        toast.error(res.message);
       } else {
-        toast.error("Something Wrong!");
+        // console.log("After Log", res);
+        const currentUser = {
+          id: res.user._id,
+          name: res.user.name,
+          email: res.user.email,
+          role: res.user.role,
+        };
+        // console.log("Redux- ", currentUser);
+        setLoading(true);
+        setIsLoading(true);
+        if (res?.status) {
+          dispatch(setUser({ user: currentUser, token: res?.token }));
+          toast.success("Login Successfully");
+          if (redirect) {
+            router.push(redirect);
+          } else {
+            router.push("/dashboard");
+          }
+        } else {
+          toast.error("Something Wrong!");
+        }
+        setLoading(false);
       }
-      setLoading(false);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
@@ -131,11 +158,11 @@ export default function Login() {
                   {errors.password.message}
                 </p>
               )}
-              <label className="label">
+              {/* <label className="label">
                 <span className="label-text-alt text-blue-600 hover:underline cursor-pointer">
                   Forgot password?
                 </span>
-              </label>
+              </label> */}
             </div>
 
             <button
