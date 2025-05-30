@@ -45,7 +45,7 @@ export default function TaskCard({ task }: { task: any }) {
 
   return (
     <>
-      <div className="bg-white dark:bg-[#1f1f1f] rounded shadow p-4">
+      <div className="bg-white dark:bg-[#1f1f1f] rounded shadow p-4 flex flex-col justify-between h-full">
         <div className="flex justify-between items-center mb-2">
           <div
             className={clsx(
@@ -64,7 +64,7 @@ export default function TaskCard({ task }: { task: any }) {
         <div className="flex items-center gap-2 mb-1">
           <TaskColor className={TASK_TYPE[task?.stage as StageType]} />
           <Link
-            href={`/dashboard/task/abc`}
+            href={`/dashboard/task/${task._id}`}
             className="tooltip tooltip-right"
             data-tip="Open task details..."
           >
@@ -131,7 +131,13 @@ export default function TaskCard({ task }: { task: any }) {
         <div className="flex flex-col gap-2 w-full">
           {/* Add Subtask */}
           <button
-            onClick={() => (document.getElementById("subtask_modal") as HTMLDialogElement | null)?.showModal()}
+            onClick={() =>
+              (
+                document.getElementById(
+                  "subtask_modal"
+                ) as HTMLDialogElement | null
+              )?.showModal()
+            }
             className="btn btn-sm btn-outline flex items-center gap-2 text-gray-600  text-center"
           >
             <IoMdAdd className="text-lg" />
@@ -146,7 +152,13 @@ export default function TaskCard({ task }: { task: any }) {
           <div className="flex justify-between">
             {/* Edit Button */}
             <button
-              onClick={() => (document.getElementById("edit_task_modal") as HTMLDialogElement | null)?.showModal()}
+              onClick={() =>
+                (
+                  document.getElementById(
+                    "edit_task_modal"
+                  ) as HTMLDialogElement | null
+                )?.showModal()
+              }
               className="btn btn-sm btn-outline flex items-center gap-2 text-blue-600 justify-start"
             >
               <MdOutlineEdit className="text-lg" />

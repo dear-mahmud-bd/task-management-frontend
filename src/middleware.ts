@@ -8,6 +8,7 @@ const authRoutes = ["/login", "/register"];
 const roleBasedPrivateRoutes = {
   // developer: [/^\/dashboard\/user/, /^\/dashboard\/dev/],
   admin: [/^\/dashboard/],
+  developer: [/^\/dashboard/],
 };
 
 export const middleware = async (request: NextRequest) => {

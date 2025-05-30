@@ -7,7 +7,7 @@ export const fetchAllUsers = async (token: string) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     const data = await res.json();
@@ -28,14 +28,17 @@ export const updateUserProfile = async (
   }
 ) => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/profile`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify(updateUserDto),
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/user/profile`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updateUserDto),
+      }
+    );
     const data = await res.json();
     return data;
   } catch (error: any) {
@@ -44,6 +47,7 @@ export const updateUserProfile = async (
   }
 };
 
+// enabled or disabled
 export const activateUser = async (
   token: string,
   id: string,
@@ -52,14 +56,17 @@ export const activateUser = async (
   }
 ) => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/activate/${id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(dto),
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/user/activate/${id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(dto),
+      }
+    );
     const data = await res.json();
     return data;
   } catch (error: any) {

@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 import Chart from "@/components/Module/Chart/Chart";
-import { dummyUsers, getPriorityChartData, tasks } from "@/utils/dummydata";
+
 import { FaNewspaper } from "react-icons/fa";
 import { FaArrowsToDot } from "react-icons/fa6";
 import { LuClipboardPenLine } from "react-icons/lu";
@@ -18,44 +20,61 @@ import {
   stageColor,
   StageType,
 } from "@/constants";
+import { useEffect, useState } from "react";
+import { useAppSelector } from "@/redux/hooks";
+import { useCurrentToken } from "@/redux/features/authSlice";
+import { getDashboardStats } from "@/services/Task";
+import Loading from "@/components/Shared/Loading";
 
 export default function Dashboard() {
+  const [statistics, setStatistics] = useState<any>(null);
+  const token = useAppSelector(useCurrentToken);
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await getDashboardStats(token as string);
+        setStatistics(data);
+      } catch (err) {
+        console.error("Dashboard stats error:", err);
+      }
+    };
+    if (token) fetchStats();
+  }, [token]);
+  if (!statistics) return <Loading />;
+  console.log(statistics);
+  console.log(statistics?.users);
+
   const stats = [
     {
       label: "TOTAL TASK",
-      total: 24,
+      total: statistics?.totalTasks | 0,
       icon: <FaNewspaper />,
       bg: "bg-blue-700",
     },
     {
       label: "COMPLETED TASK",
-      total: 15,
+      total: statistics?.tasks?.completed | 0,
       icon: <MdAdminPanelSettings />,
       bg: "bg-teal-700",
     },
     {
       label: "TASK IN PROGRESS",
-      total: 5,
+      total: statistics?.tasks?.in_progress | 0,
       icon: <LuClipboardPenLine />,
       bg: "bg-amber-500",
     },
     {
       label: "TODOS",
-      total: 4,
+      total: statistics?.tasks?.todo | 0,
       icon: <FaArrowsToDot />,
       bg: "bg-rose-700",
     },
   ];
-
   const priorityIcon = {
     high: <MdKeyboardDoubleArrowUp />,
     medium: <MdKeyboardArrowUp />,
     low: <MdKeyboardArrowDown />,
   };
-
-  const priorityData = getPriorityChartData(tasks);
-  console.log(priorityData);
-  // ChartProps
 
   return (
     <div className="h-full py-4 px-4">
@@ -86,7 +105,7 @@ export default function Dashboard() {
           Chart by Priority
         </h4>
         <div className="w-full h-96 bg-gray-100 flex items-center justify-center text-gray-400">
-          <Chart data={priorityData} />
+          <Chart data={statistics?.graphData} />
           {/* Here add chart */}
         </div>
       </div>
@@ -108,7 +127,7 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {tasks.map((task, idx) => (
+              {statistics?.last10Task.map((task: any, idx: number) => (
                 <tr
                   key={idx}
                   className="border-b border-gray-200 hover:bg-gray-100"
@@ -137,7 +156,7 @@ export default function Dashboard() {
                   </td>
                   <td className="py-2">
                     <div className="flex -space-x-2">
-                      {task.team.map((member, i) => (
+                      {task.team.map((member: any, i: number) => (
                         <div
                           key={i}
                           className={`w-7 h-7 rounded-full ${
@@ -172,7 +191,7 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {dummyUsers.map((user, idx) => (
+              {statistics?.users.map((user: any, idx: number) => (
                 <tr
                   key={idx}
                   className="border-b border-gray-200 hover:bg-gray-100"
@@ -182,7 +201,7 @@ export default function Dashboard() {
                       <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center text-xs">
                         {user.name
                           .split(" ")
-                          .map((n) => n[0])
+                          .map((n:any) => n[0])
                           .join("")}
                       </div>
                       <div>
@@ -204,7 +223,7 @@ export default function Dashboard() {
                       {user.isActive ? "Active" : "Disabled"}
                     </span>
                   </td>
-                  <td className="py-2 text-gray-500">{user.createdAt}</td>
+                  <td className="py-2 text-gray-500"> {format(new Date(user.createdAt), "PP")} </td>
                 </tr>
               ))}
             </tbody>

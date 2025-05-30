@@ -1,30 +1,27 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { IoMdAdd } from "react-icons/io";
 import BoardView from "@/components/Module/Task/BoardView";
 import { useAppSelector } from "@/redux/hooks";
-import { selectCurrentUser } from "@/redux/features/authSlice";
-import { tasks } from "@/utils/dummydata";
+import { selectCurrentUser, useCurrentToken } from "@/redux/features/authSlice";
 import { FieldValues, useForm } from "react-hook-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
-
-const dummyUsers = [
-  { id: 1, name: "Alice" },
-  { id: 2, name: "Bob" },
-  { id: 3, name: "Charlie" },
-  { id: 4, name: "Dan" },
-  { id: 5, name: "Ena" },
-  { id: 6, name: "Falcon" },
-];
-const options = dummyUsers.map((u) => ({
-  value: u.id,
-  label: u.name,
-}));
+import { createTask, fetchTasks } from "@/services/Task";
+import Loading from "@/components/Shared/Loading";
+import { fetchAllUsers } from "@/services/User";
+import { toast } from "sonner";
 
 export default function TasksPage() {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+
   const savedUser = useAppSelector(selectCurrentUser);
+  const token = useAppSelector(useCurrentToken);
   const [open, setOpen] = useState(false);
 
   const {
@@ -35,11 +32,77 @@ export default function TasksPage() {
     formState: { errors },
   } = useForm();
 
+  // get all users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchAllUsers(token as string);
+        setUsers(data);
+      } catch (error) {
+        toast.error("Failed to load users");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, [token]);
+  // console.log(users);
+
+  // get all tasks
+  useEffect(() => {
+    const getTasks = async () => {
+      if (!token) return;
+      try {
+        const data = await fetchTasks(token);
+        setTasks(data);
+      } catch (error) {
+        console.error("Error loading tasks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getTasks();
+  }, [token]);
+  if (loading) return <Loading />;
+
+  const options = users.map((u: any) => ({
+    value: u._id,
+    label: `${u.name} - ${u.title}`,
+  }));
+
   const data = tasks;
   const isAdmin = savedUser?.role === "admin";
 
-  const onSubmit = (formData: FieldValues) => {
+  // https://figma.com/design1, https://drive.google.com/file123
+  const onSubmit = async (formData: FieldValues) => {
     console.log("New Task Data:", formData);
+    const taskData = {
+      title: formData.title,
+      team: formData.assignedTo,
+      stage: "todo",
+      priority: formData.priority,
+      date: new Date(formData.date).toISOString(),
+      description: formData.description,
+      assets: [],
+      links: formData.links
+        ? formData.links.split(",").map((link: string) => link.trim())
+        : [],
+    };
+    try {
+      const res = await createTask(token as string, taskData);
+      if(res.status){
+        toast.success("Task created successfully!");
+      }else{
+        toast.error("Failed to create task");
+      }
+      reset();
+      (document.getElementById("task_modal") as HTMLDialogElement)?.close();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create task");
+    }
+    console.log("taskData: ", taskData);
     reset();
     (document.getElementById("task_modal") as HTMLDialogElement).close();
   };
@@ -87,10 +150,10 @@ export default function TasksPage() {
                 <span className="label-text">Description</span>
               </label>
               <textarea
-                {...register("description")}
+                {...register("description", { required: true })}
                 placeholder="Task Description"
                 className="textarea textarea-bordered w-full"
-                rows={3}
+                rows={2}
               ></textarea>
             </div>
             <div>
@@ -99,11 +162,14 @@ export default function TasksPage() {
               </label>
               <Select
                 isMulti
-                options={options}
+                options={options as any}
+                required
                 placeholder="Assigned To..."
+                value={selectedUsers} // controlled input
                 onChange={(selected) => {
-                  const selectedNames = selected.map((s) => s.label);
-                  setValue("assignedTo", selectedNames); // use setValue from react-hook-form
+                  setSelectedUsers(selected as any); // save full selected option objects
+                  const selectedIds = selected.map((s: any) => s.value); // or s.label if needed
+                  setValue("assignedTo", selectedIds); // or full objects if required
                 }}
                 className="text-black"
               />
@@ -141,17 +207,26 @@ export default function TasksPage() {
               <label className="label">
                 <span className="label-text">Important Links</span>
               </label>
-              <input
+              <textarea
                 {...register("links")}
-                type="text"
+                rows={3}
                 placeholder="Support Links (comma separated)"
                 className="input input-bordered w-full"
               />
             </div>
             <div className="modal-action">
-              <form method="dialog">
-                <button className="btn">Close</button>
-              </form>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  const modal = document.getElementById(
+                    "task_modal"
+                  ) as HTMLDialogElement;
+                  modal?.close();
+                }}
+              >
+                Close
+              </button>
 
               <button type="submit" className="btn btn-primary">
                 Create A New Task

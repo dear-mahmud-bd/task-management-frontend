@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { protectedRoutes } from "@/constants";
@@ -36,7 +37,7 @@ const mockNotifications = [
 ];
 const Navbar = () => {
   const { user, setIsLoading } = useUser();
-  console.log(user);
+  // console.log(user);
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
