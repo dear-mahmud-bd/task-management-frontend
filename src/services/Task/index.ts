@@ -97,3 +97,60 @@ export const updateTask = async (
     };
   }
 };
+
+export const createSubTask = async (
+  taskId: string,
+  subTaskData: any,
+  token: string
+) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/task/create-subtasks/${taskId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(subTaskData),
+      }
+    );
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    console.error("Create subtask error:", error);
+    return {
+      status: false,
+      message: (error as Error).message || "Something went wrong",
+    };
+  }
+};
+
+export const updateSubTaskStatus = async (
+  taskId: string,
+  subTaskId: string,
+  status: boolean,
+  token: string
+) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/task/subtasks/status/${taskId}/${subTaskId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      }
+    );
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    console.error("Update subtask status error:", error);
+    return {
+      status: false,
+      message: (error as Error).message || "Something went wrong",
+    };
+  }
+};

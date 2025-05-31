@@ -1,7 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
+import { useCurrentToken } from "@/redux/features/authSlice";
+import { useAppSelector } from "@/redux/hooks";
+import { createSubTask } from "@/services/Task";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { IoMdAdd } from "react-icons/io";
+import { toast } from "sonner";
 
 type SubTaskFormData = {
   title: string;
@@ -11,20 +17,38 @@ type SubTaskFormData = {
 type SubTaskModalProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onSubmit: (data: SubTaskFormData) => void;
+  onSubmit: (data: SubTaskFormData, taskId: string) => void;
+  taskId: string; // ✅ Add this
 };
 
-
 export default function SubTaskModal({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   open,
   setOpen,
   onSubmit,
+  taskId,
 }: SubTaskModalProps) {
+  const token = useAppSelector(useCurrentToken);
   const { register, handleSubmit, reset } = useForm<SubTaskFormData>();
 
-  const handleAdd: SubmitHandler<SubTaskFormData> = (data) => {
-    onSubmit(data);
+  const handleAdd: SubmitHandler<SubTaskFormData> = async (data) => {
+    const formData = {
+      title: data.title,
+      tag: data.tag,
+      date: new Date().toISOString(), // make date iso formate...
+    };
+    console.log(data, taskId, formData);
+
+    
+    try {
+      const res = await createSubTask(taskId, formData, token as string);
+      if (res.status) {
+        toast.success("Sub-Task added successfully!");
+      } else {
+        toast.error("Failed to add Sub-Tas");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add Sub-Tas");
+    }
     reset();
     setOpen(false);
     const modal = document.getElementById("subtask_modal") as HTMLDialogElement;

@@ -192,9 +192,9 @@ const EditTaskModal = ({ task, onSave }: EditTaskModalProps) => {
             <label className="label">
               <span className="label-text">Important Links</span>
             </label>
-            <input
+            <textarea
               {...register("links")}
-              type="text"
+              rows={3}
               placeholder="Support Links (comma separated)"
               className="input input-bordered w-full"
             />

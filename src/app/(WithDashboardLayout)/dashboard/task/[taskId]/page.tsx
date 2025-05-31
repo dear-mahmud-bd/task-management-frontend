@@ -90,7 +90,7 @@ const TaskDetailsPage = () => {
             <TaskHeader task={task} />
             <TaskStats task={task} />
             <TeamSection team={task?.team} />
-            <SubTasks subTasks={task?.subTasks} />
+            <SubTasks  subTasks={task?.subTasks} taskId={task?._id} />
           </div>
           <div className="space-y-6">
             <TaskDescription description={task?.description} />
@@ -113,8 +113,8 @@ const TaskDetailsPage = () => {
       <SubTaskModal
         open={isSubTaskModalOpen}
         setOpen={setIsSubTaskModalOpen}
+        taskId={task._id} 
         onSubmit={(newSubtask) => {
-          console.log("New Subtask:", newSubtask);
           setTask((prev: any) => ({
             ...prev,
             subTasks: [...(prev?.subTasks || []), newSubtask],
