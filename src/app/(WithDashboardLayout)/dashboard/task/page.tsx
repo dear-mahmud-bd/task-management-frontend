@@ -13,12 +13,15 @@ import { createTask, fetchTasks } from "@/services/Task";
 import Loading from "@/components/Shared/Loading";
 import { fetchAllUsers } from "@/services/User";
 import { toast } from "sonner";
+import { utils, writeFile } from "xlsx";
+import moment from "moment";
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [exporting, setExporting] = useState(false);
 
   const savedUser = useAppSelector(selectCurrentUser);
   const token = useAppSelector(useCurrentToken);
@@ -75,6 +78,36 @@ export default function TasksPage() {
   const data = tasks;
   const isAdmin = savedUser?.role === "admin";
 
+  // download data...
+  const handleExportExcel = () => {
+    if (!tasks || tasks.length === 0) return;
+    setExporting(true);
+    // Transform task objects if needed
+    const transformedData = tasks.map((task: any) => {
+      const startedDate = task.date;
+      const updatedDate = task.updatedAt;
+      const totalDays = moment(updatedDate).diff(moment(startedDate), "days");
+      return {
+        Task_Title: task.title,
+        Priority: task.priority,
+        Total_Subtask: task.subTasks?.length || 0,
+        Complete_Subtask:
+          task.subTasks?.filter((s: any) => s.isCompleted)?.length || 0,
+        Team_Members: task.team?.map((m: any) => m.name).join(", "),
+        Current_Stage: task.stage,
+        Started_Date: moment(startedDate).format("YYYY-MM-DD"),
+        Total_Days: totalDays,
+      };
+    });
+
+    const worksheet = utils.json_to_sheet(transformedData);
+    const workbook = utils.book_new();
+    utils.book_append_sheet(workbook, worksheet, "Tasks");
+
+    writeFile(workbook, "TaskData.xlsx");
+    setExporting(false);
+  };
+
   // https://figma.com/design1, https://drive.google.com/file123
   const onSubmit = async (formData: FieldValues) => {
     console.log("New Task Data:", formData);
@@ -113,6 +146,15 @@ export default function TasksPage() {
         <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">
           Tasks
         </h1>
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleExportExcel}
+            className="btn btn-sm btn-outline btn-success"
+            disabled={exporting}
+          >
+            {exporting ? "Exporting..." : "Export Report to Excel"}
+          </button>
+        </div>
         {isAdmin && (
           <button
             onClick={() =>
@@ -178,7 +220,7 @@ export default function TasksPage() {
                 className="text-black"
               />
             </div>
-            
+
             {/* data and priority */}
             <div className="flex flex-col md:flex-row gap-4">
               <div className="w-full md:w-1/2">

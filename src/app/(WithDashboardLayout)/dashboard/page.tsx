@@ -43,7 +43,7 @@ export default function Dashboard() {
     if (token) fetchStats();
   }, [token]);
   if (!statistics) return <Loading />;
-  console.log(statistics);
+  // console.log(statistics);
   // console.log(statistics?.users);
 
   const stats = [

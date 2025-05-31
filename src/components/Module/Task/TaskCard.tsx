@@ -40,9 +40,13 @@ export const TASK_TYPE = {
 export default function TaskCard({ task }: { task: any }) {
   const token = useAppSelector(useCurrentToken);
   const user = useAppSelector(selectCurrentUser);
-  const handleConfirmDelete = async () => {
+
+  const handleConfirmDelete = async (selectedTaskId: string) => {
+    // add window to confirmation
+    const confirmed = window.confirm("Are you sure? You want to delete this!");
+    if (!confirmed) return;
     try {
-      const res = await trashTask(task._id, token as string);
+      const res = await trashTask(selectedTaskId, token as string);
       if (res.status) {
         toast.success("Task trashed successfully!");
       } else {
@@ -151,36 +155,13 @@ export default function TaskCard({ task }: { task: any }) {
 
           {user?.role === "admin" && (
             <button
-              onClick={() =>
-                (
-                  document.getElementById("delete_modal") as HTMLDialogElement
-                )?.showModal()
-              }
+              onClick={() => handleConfirmDelete(task._id)}
               className="btn btn-sm btn-outline flex items-center gap-2 text-red-600 justify-start"
             >
               <BiTrash className="text-lg" />
               Delete
             </button>
           )}
-
-          <dialog id="delete_modal" className="modal">
-            <div className="modal-box">
-              <h3 className="font-bold text-lg text-red-600">Confirm Delete</h3>
-              <p className="py-4">Are you sure you want to delete this task?</p>
-              <div className="modal-action">
-                <form method="dialog" className="flex gap-2">
-                  <button className="btn btn-sm">Cancel</button>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-error text-white"
-                    onClick={handleConfirmDelete}
-                  >
-                    Yes, Delete
-                  </button>
-                </form>
-              </div>
-            </div>
-          </dialog>
         </div>
       </div>
     </>

@@ -27,6 +27,11 @@ type UserFormData = {
 const UserTable = () => {
   const currentUser = useAppSelector(selectCurrentUser);
   const { register, handleSubmit, reset } = useForm<UserFormData>();
+  const {
+    register: editRegister,
+    handleSubmit: editHandleSubmit,
+    reset: editReset,
+  } = useForm<UserFormData>();
   const [editingUser, setEditingUser] = useState<UserFormData | null>(null);
   const openModal = () => {
     const modal = document.getElementById(
@@ -92,12 +97,13 @@ const UserTable = () => {
   // edit user details
   const handleEditUser = (user: UserFormData) => {
     setEditingUser(user);
-    reset(user); // prefill form with selected user data
+    editReset(user); // prefill form with selected user data
     const modal = document.getElementById(
       "edit_user_modal"
     ) as HTMLDialogElement;
     modal?.showModal();
   };
+
   const onEditSubmit = async (data: UserFormData) => {
     try {
       // Send PUT/PATCH request to update user
@@ -145,7 +151,10 @@ const UserTable = () => {
       >
         <div className="modal-box">
           <h3 className="font-bold text-lg mb-4">Add New User</h3>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
+          <form
+            onSubmit={handleSubmit((data) => onSubmit(data))}
+            className="space-y-1"
+          >
             <div>
               <label className="label">
                 <span className="label-text">Full Name</span>
@@ -211,7 +220,7 @@ const UserTable = () => {
                 Cancel
               </button>
               <button type="submit" className="btn btn-primary btn-sm">
-                Add User
+                Create A User
               </button>
             </div>
           </form>
@@ -233,7 +242,7 @@ const UserTable = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user: UserFormData) => (
+            {users?.map((user: UserFormData) => (
               <tr key={user._id} className="hover">
                 <td>
                   <div className="flex items-center gap-3">
@@ -286,7 +295,7 @@ const UserTable = () => {
         <div className="modal-box">
           <h3 className="font-bold text-lg mb-4">Edit User</h3>
           <form
-            onSubmit={handleSubmit((data) => onEditSubmit(data))}
+            onSubmit={editHandleSubmit((data) => onEditSubmit(data))}
             className="space-y-1"
           >
             <div>
@@ -294,7 +303,7 @@ const UserTable = () => {
                 <span className="label-text">Full Name</span>
               </label>
               <input
-                {...register("name", { required: true })}
+                {...editRegister("name", { required: true })}
                 type="text"
                 placeholder="Name"
                 className="input input-bordered w-full"
@@ -305,7 +314,7 @@ const UserTable = () => {
                 <span className="label-text">Job Title</span>
               </label>
               <input
-                {...register("title", { required: true })}
+                {...editRegister("title", { required: true })}
                 type="text"
                 placeholder="Title"
                 className="input input-bordered w-full"
@@ -316,7 +325,7 @@ const UserTable = () => {
                 <span className="label-text">Email</span>
               </label>
               <input
-                {...register("email", { required: true })}
+                {...editRegister("email", { required: true })}
                 type="email"
                 placeholder="Email"
                 className="input input-bordered w-full"
@@ -328,7 +337,7 @@ const UserTable = () => {
                 <span className="label-text">User Role</span>
               </label>
               <select
-                {...register("role", { required: true })}
+                {...editRegister("role", { required: true })}
                 className="select select-bordered w-full"
                 disabled={editingUser?.role === "admin"}
               >

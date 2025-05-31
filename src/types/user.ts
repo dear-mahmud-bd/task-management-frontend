@@ -1,5 +1,6 @@
 export interface IUser {
-  _id: string;
+  _id?: string;
+  id?: string;
   name?: string;
   email: string;
   role: "developer" | "admin" | "manager";

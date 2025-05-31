@@ -21,30 +21,7 @@ import { useState, useEffect } from "react";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import moment from "moment";
 import NotificationModal from "./NotificationModal";
-
-const mockNotifications = [
-  {
-    id: 1,
-    type: "alert",
-    text: "Server CPU usage is high.",
-    createdAt: new Date(),
-    read: false,
-  },
-  {
-    id: 2,
-    type: "message",
-    text: "You have a new message from Alice.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 5),
-    read: false,
-  },
-  {
-    id: 3,
-    type: "alert",
-    text: "New team member joined your project.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60),
-    read: true,
-  },
-];
+import ProfileModal from "./ProfileModal";
 
 const Navbar = () => {
   const token = useAppSelector(useCurrentToken);
@@ -54,11 +31,14 @@ const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  // console.log(savedUser.name);
+  console.log(savedUser);
   const [notifications, setNotifications] = useState<any[]>([]);
 
   const [selectedNotification, setSelectedNotification] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const openProfileModal = () => setIsProfileOpen(true);
+  const closeProfileModal = () => setIsProfileOpen(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -75,7 +55,7 @@ const Navbar = () => {
     fetchNotifications();
   }, [token]);
 
-  console.log(notifications);
+  // console.log(notifications);
 
   const handleLogOut = () => {
     dispatch(signOut());
@@ -242,19 +222,20 @@ const Navbar = () => {
                 tabIndex={0}
                 className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
               >
-                <li>
-                  <a className="justify-between">
+                <li onClick={openProfileModal}>
+                  <a className="justify-between cursor-pointer">
                     Profile
                     <span className="badge">New</span>
                   </a>
                 </li>
-                <li>
+                {/* <li>
                   <a>Settings</a>
-                </li>
+                </li> */}
                 <li>
                   <a onClick={handleLogOut}>Logout</a>
                 </li>
               </ul>
+              <ProfileModal isOpen={isProfileOpen} onClose={closeProfileModal} user={savedUser} />
             </div>
           </div>
         </div>
