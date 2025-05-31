@@ -2,11 +2,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect } from "react";
+import { useCurrentToken } from "@/redux/features/authSlice";
+import { useAppSelector } from "@/redux/hooks";
+import { updateTask } from "@/services/Task";
+import { fetchAllUsers } from "@/services/User";
+import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Select from "react-select";
+import { toast } from "sonner";
 
 type TaskType = {
+  _id: string;
   title: string;
   date: string;
   priority: "low" | "normal" | "medium" | "high";
@@ -20,18 +26,9 @@ type EditTaskModalProps = {
   onSave: (data: TaskType) => void;
 };
 
-const dummyUsers = [
-  { id: 1, name: "Alice Doe" },
-  { id: 2, name: "Bob Smith" },
-  { id: 3, name: "Charlie Ray" },
-];
-
-const options = dummyUsers.map((user) => ({
-  value: user.name,
-  label: user.name,
-}));
-
 const EditTaskModal = ({ task, onSave }: EditTaskModalProps) => {
+  const token = useAppSelector(useCurrentToken);
+  const [users, setUsers] = useState([]);
   const {
     register,
     handleSubmit,
@@ -49,6 +46,20 @@ const EditTaskModal = ({ task, onSave }: EditTaskModalProps) => {
     },
   });
 
+  // get all users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await fetchAllUsers(token as string);
+        setUsers(data);
+      } catch (error) {
+        toast.error("Failed to load users");
+        console.error(error);
+      }
+    };
+    fetchUsers();
+  }, [token]);
+
   useEffect(() => {
     if (task) {
       reset({
@@ -62,15 +73,37 @@ const EditTaskModal = ({ task, onSave }: EditTaskModalProps) => {
     }
   }, [task, reset]);
 
-  const handleUpdate: SubmitHandler<any> = (data) => {
-    const formatted: TaskType = {
-      ...data,
-      links: data.links?.split(",").map((l: string) => l.trim()) || [],
-      assignedTo: Array.isArray(data.assignedTo)
-        ? data.assignedTo
-        : [data.assignedTo],
+  const options = users.map((u: any) => ({
+    value: u._id,
+    label: `${u.name} - ${u.title}`,
+  }));
+
+  const handleUpdate: SubmitHandler<any> = async (formData) => {
+    const taskData = {
+      title: formData.title,
+      team: formData.assignedTo,
+      stage: "todo",
+      priority: formData.priority,
+      date: new Date(formData.date).toISOString(),
+      description: formData.description,
+      assets: [],
+      links: formData.links
+        ? formData.links.split(",").map((link: string) => link.trim())
+        : [],
     };
-    onSave(formatted);
+    try {
+      const res = await updateTask(task._id, taskData, token as string);
+      if (res.status) {
+        toast.success("Task updated successfully!");
+      } else {
+        toast.error("Failed to update task");
+      }
+      reset();
+      (document.getElementById("task_modal") as HTMLDialogElement)?.close();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update task");
+    }
+    console.log("taskData: ", taskData);
     (document.getElementById("edit_task_modal") as HTMLDialogElement)?.close();
   };
 
@@ -98,7 +131,7 @@ const EditTaskModal = ({ task, onSave }: EditTaskModalProps) => {
               <span className="label-text">Description</span>
             </label>
             <textarea
-              {...register("description")}
+              {...register("description", { required: true })}
               className="textarea textarea-bordered w-full"
               placeholder="Task description..."
               rows={3}
@@ -112,6 +145,7 @@ const EditTaskModal = ({ task, onSave }: EditTaskModalProps) => {
             </label>
             <Select
               isMulti
+              required
               options={options}
               placeholder="Assigned To..."
               defaultValue={options.filter((opt) =>
@@ -168,9 +202,18 @@ const EditTaskModal = ({ task, onSave }: EditTaskModalProps) => {
 
           {/* Action Buttons */}
           <div className="modal-action">
-            <form method="dialog">
-              <button className="btn btn-sm">Cancel</button>
-            </form>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => {
+                const modal = document.getElementById(
+                  "edit_task_modal"
+                ) as HTMLDialogElement;
+                modal?.close();
+              }}
+            >
+              Cancel
+            </button>
             <button type="submit" className="btn btn-primary btn-sm">
               Update Task
             </button>

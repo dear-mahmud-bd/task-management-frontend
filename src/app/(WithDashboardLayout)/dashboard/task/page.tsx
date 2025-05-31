@@ -92,9 +92,9 @@ export default function TasksPage() {
     };
     try {
       const res = await createTask(token as string, taskData);
-      if(res.status){
+      if (res.status) {
         toast.success("Task created successfully!");
-      }else{
+      } else {
         toast.error("Failed to create task");
       }
       reset();

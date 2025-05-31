@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { FieldValues } from "react-hook-form";
@@ -51,3 +52,48 @@ export const createTask = async (token: string, taskData: FieldValues) => {
   }
 };
 
+export const getSingleTask = async (id: string, token: string) => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/task/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store", // Ensures fresh data
+    });
+    const data = await res.json();
+    return data.task;
+  } catch (error) {
+    console.error("Fetch single task error:", error);
+    return null;
+  }
+};
+
+export const updateTask = async (
+  id: string,
+  updatedData: any,
+  token: string
+) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/task/update/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedData),
+      }
+    );
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    console.error("Update task error:", error);
+    return {
+      status: false,
+      message: (error as Error).message || "Something went wrong",
+    };
+  }
+};
