@@ -99,7 +99,7 @@ const TaskDetailsPage = () => {
           </div>
         </div>
       ) : (
-        <Activities activities={task?.activities} />
+        <Activities activities={task?.activities} taskId={task?._id} />
       )}
 
       {/* ✅ Modals */}

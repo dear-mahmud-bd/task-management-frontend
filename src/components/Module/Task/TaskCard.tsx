@@ -75,7 +75,7 @@ export default function TaskCard({ task }: { task: any }) {
           <TaskAssets
             activities={task?.activities?.length}
             subTasks={task?.subTasks}
-            assets={task?.assets?.length}
+            assets={task?.links?.length}
           />
           <div className="flex -space-x-2">
             {/* {task?.team?.map((m, i) => (

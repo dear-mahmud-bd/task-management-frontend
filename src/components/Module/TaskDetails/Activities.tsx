@@ -1,30 +1,38 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState } from "react";
+import { format } from "date-fns";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { postTaskActivity } from "@/services/Task";
+import { toast } from "sonner";
+import { useAppSelector } from "@/redux/hooks";
+import { useCurrentToken } from "@/redux/features/authSlice";
 
 type ActivityType =
   | "started"
   | "completed"
   | "in_progress"
-  | "comment"
+  | "commented"
   | "bug"
   | "assigned";
 
 interface Activity {
+  [x: string]: string | number | Date;
   type: ActivityType;
   activity: string;
 }
 
 interface ActivitiesProps {
   activities: Activity[];
+  taskId: string;
 }
 
 const statusOptions: { label: string; value: ActivityType }[] = [
   { label: "Started", value: "started" },
   { label: "Completed", value: "completed" },
   { label: "In Progress", value: "in_progress" },
-  { label: "Comment", value: "comment" },
+  { label: "Comment", value: "commented" },
   { label: "Bug", value: "bug" },
   { label: "Assigned", value: "assigned" },
 ];
@@ -35,9 +43,10 @@ interface FormInputs {
   activity: string;
 }
 
-const Activities: React.FC<ActivitiesProps> = ({ activities }) => {
+const Activities: React.FC<ActivitiesProps> = ({ activities, taskId }) => {
+  const token = useAppSelector(useCurrentToken);
   const [activityList, setActivityList] = useState<Activity[]>(activities);
-
+  console.log(activities);
   const {
     register,
     handleSubmit,
@@ -51,12 +60,35 @@ const Activities: React.FC<ActivitiesProps> = ({ activities }) => {
     },
   });
 
-  const onSubmit: SubmitHandler<FormInputs> = (data) => {
+  const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     const newActivity: Activity = {
       type: data.status,
       activity: data.activity.trim(),
+      date: new Date().toISOString(),
     };
-    setActivityList((prev) => [...prev, newActivity]);
+
+    try {
+      const res = await postTaskActivity(
+        taskId,
+        newActivity.type,
+        newActivity.activity,
+        token as string
+      );
+      console.log(res);
+      
+
+      if (res.status) {
+        toast.success("Activity added successfully!");
+        setActivityList((prev) => [...prev, newActivity]);
+        reset();
+      } else {
+        toast.error("Failed to add activity");
+      }
+    } catch (error: any) {
+      toast.error(
+        error.message || "Something went wrong while posting activity"
+      );
+    }
     reset();
   };
 
@@ -70,7 +102,9 @@ const Activities: React.FC<ActivitiesProps> = ({ activities }) => {
         <ul className="list-disc pl-5 text-gray-600">
           {activityList.map((act, idx) => (
             <li key={idx}>
-              <strong>{act.type.toUpperCase()}</strong>: {act.activity}
+              <strong>{act.type.toUpperCase()} </strong>{" "}
+              <small>{format(new Date(act.date), "MMM dd, yyyy")}</small> :{" "}
+              {act.activity}
             </li>
           ))}
         </ul>
@@ -100,7 +134,9 @@ const Activities: React.FC<ActivitiesProps> = ({ activities }) => {
               ))}
             </div>
             {errors.status && (
-              <p className="text-sm text-red-500 mt-1">{errors.status.message}</p>
+              <p className="text-sm text-red-500 mt-1">
+                {errors.status.message}
+              </p>
             )}
           </div>
 
@@ -117,7 +153,9 @@ const Activities: React.FC<ActivitiesProps> = ({ activities }) => {
               })}
             />
             {errors.activity && (
-              <p className="text-sm text-red-500 mt-1">{errors.activity.message}</p>
+              <p className="text-sm text-red-500 mt-1">
+                {errors.activity.message}
+              </p>
             )}
           </div>
 

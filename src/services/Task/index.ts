@@ -154,3 +154,63 @@ export const updateSubTaskStatus = async (
     };
   }
 };
+
+export const postTaskActivity = async (
+  taskId: string,
+  type: string,
+  activity: string,
+  token: string
+) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/task/activity/${taskId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ type, activity }),
+      }
+    );
+
+    const result = await res.json();
+
+    return result;
+  } catch (error) {
+    console.error("Post task activity error:", error);
+    return {
+      status: false,
+      message: (error as Error).message || "Something went wrong",
+    };
+  }
+};
+
+export const updateTaskStage = async (
+  taskId: string,
+  updateTaskStageDto: { stage: string },
+  token: string
+) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/task/update-stage/${taskId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updateTaskStageDto),
+      }
+    );
+
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    console.error("Update task stage error:", error);
+    return {
+      status: false,
+      message: (error as Error).message || "Something went wrong",
+    };
+  }
+};

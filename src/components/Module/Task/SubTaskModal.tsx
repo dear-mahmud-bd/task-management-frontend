@@ -38,7 +38,6 @@ export default function SubTaskModal({
     };
     console.log(data, taskId, formData);
 
-    
     try {
       const res = await createSubTask(taskId, formData, token as string);
       if (res.status) {
@@ -73,9 +72,16 @@ export default function SubTaskModal({
             className="input input-bordered w-full"
           />
           <div className="modal-action">
-            <form method="dialog">
-              <button className="btn btn-sm">Cancel</button>
-            </form>
+            <button
+              onClick={() =>
+                (
+                  document.getElementById("your_modal_id") as HTMLDialogElement
+                )?.close()
+              }
+              className="btn btn-sm"
+            >
+              Cancel
+            </button>
             <button type="submit" className="btn btn-primary btn-sm">
               <IoMdAdd className="mr-1" /> Add Subtask
             </button>
