@@ -74,3 +74,47 @@ export const getCurrentUser = async () => {
     return null;
   }
 };
+
+export const getUserNotifications = async (token: string) => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/notification`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    return { status: false, message: "Failed to fetch notifications" };
+  }
+};
+
+export const markNotificationAsRead = async (
+  token: string,
+  isReadType: "single" | "all",
+  id?: string
+) => {
+  try {
+    const queryParams = new URLSearchParams();
+    queryParams.append("isReadType", isReadType);
+    if (id) queryParams.append("id", id);
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/notification/read?${queryParams.toString()}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    return { status: false, message: "Failed to mark as read" };
+  }
+};

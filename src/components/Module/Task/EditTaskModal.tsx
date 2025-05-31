@@ -22,7 +22,7 @@ type TaskType = {
 };
 
 type EditTaskModalProps = {
-  task: TaskType | null;
+  task: TaskType;
   onSave: (data: TaskType) => void;
 };
 
@@ -134,7 +134,7 @@ const EditTaskModal = ({ task, onSave }: EditTaskModalProps) => {
               {...register("description", { required: true })}
               className="textarea textarea-bordered w-full"
               placeholder="Task description..."
-              rows={3}
+              rows={2}
             />
           </div>
 
@@ -194,9 +194,9 @@ const EditTaskModal = ({ task, onSave }: EditTaskModalProps) => {
             </label>
             <textarea
               {...register("links")}
-              rows={3}
+              className="textarea textarea-bordered w-full"
               placeholder="Support Links (comma separated)"
-              className="input input-bordered w-full"
+              rows={2}
             />
           </div>
 

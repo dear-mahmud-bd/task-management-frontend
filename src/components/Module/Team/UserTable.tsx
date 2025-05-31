@@ -12,7 +12,7 @@ import { registerUser } from "@/services/AuthService";
 import { getInitials } from "@/utils";
 import { fetchAllUsers, updateUserProfile } from "@/services/User";
 import { useAppSelector } from "@/redux/hooks";
-import { useCurrentToken } from "@/redux/features/authSlice";
+import { selectCurrentUser, useCurrentToken } from "@/redux/features/authSlice";
 import { StatusToggleModal } from "./StatusToggleModal";
 
 type UserFormData = {
@@ -25,6 +25,7 @@ type UserFormData = {
 };
 
 const UserTable = () => {
+  const currentUser = useAppSelector(selectCurrentUser);
   const { register, handleSubmit, reset } = useForm<UserFormData>();
   const [editingUser, setEditingUser] = useState<UserFormData | null>(null);
   const openModal = () => {
@@ -131,10 +132,12 @@ const UserTable = () => {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Team Members</h2>
-        <button className="btn btn-primary btn-sm" onClick={openModal}>
-          <IoMdAdd className="text-lg" />
-          Add New User
-        </button>
+        {currentUser?.role === "admin" && (
+          <button className="btn btn-primary btn-sm" onClick={openModal}>
+            <IoMdAdd className="text-lg" />
+            Add New User
+          </button>
+        )}
       </div>
       <dialog
         id="add_user_modal"
@@ -224,7 +227,9 @@ const UserTable = () => {
               <th>Email</th>
               <th>Role</th>
               <th>Status</th>
-              <th className="text-right">Actions</th>
+              {currentUser?.role === "admin" && (
+                <th className="text-right">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -244,28 +249,31 @@ const UserTable = () => {
                 <td>{user.email}</td>
                 <td>{user.role}</td>
                 <td>
-                  <StatusToggleModal
-                  userId={user._id}
-                  isActive={user.isActive}
-                  token={token as string}
-                  role={user.role}
-                />
-                
-                </td>
-                <td className="text-right space-x-2">
-                  <button
-                    className="btn btn-sm btn-outline text-blue-600"
-                    onClick={() => handleEditUser(user)}
-                  >
-                    <MdOutlineEdit className="text-lg" />
-                    Edit
+                  <button disabled={currentUser?.role === "developer"}>
+                    <StatusToggleModal
+                      userId={user._id}
+                      isActive={user.isActive}
+                      token={token as string}
+                      role={user.role}
+                    />
                   </button>
+                </td>
+                {currentUser?.role === "admin" && (
+                  <td className="text-right space-x-2">
+                    <button
+                      className="btn btn-sm btn-outline text-blue-600"
+                      onClick={() => handleEditUser(user)}
+                    >
+                      <MdOutlineEdit className="text-lg" />
+                      Edit
+                    </button>
 
-                  {/* <button className="btn btn-sm btn-outline text-red-600">
+                    {/* <button className="btn btn-sm btn-outline text-red-600">
                     <RiDeleteBin6Line className="text-lg" />
                     Delete
                   </button> */}
-                </td>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

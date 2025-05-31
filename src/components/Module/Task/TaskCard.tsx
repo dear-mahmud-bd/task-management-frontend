@@ -12,8 +12,12 @@ import { avatarColors, PriorityType, StageType } from "@/constants";
 import { getInitials } from "@/utils";
 import { format } from "date-fns";
 import TaskColor from "./TaskColor";
-import { BiDetail } from "react-icons/bi";
+import { BiDetail, BiTrash } from "react-icons/bi";
 import Link from "next/link";
+import { trashTask } from "@/services/Task";
+import { useAppSelector } from "@/redux/hooks";
+import { selectCurrentUser, useCurrentToken } from "@/redux/features/authSlice";
+import { toast } from "sonner";
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -34,6 +38,21 @@ export const TASK_TYPE = {
 };
 
 export default function TaskCard({ task }: { task: any }) {
+  const token = useAppSelector(useCurrentToken);
+  const user = useAppSelector(selectCurrentUser);
+  const handleConfirmDelete = async () => {
+    try {
+      const res = await trashTask(task._id, token as string);
+      if (res.status) {
+        toast.success("Task trashed successfully!");
+      } else {
+        toast.error(res.message || "Failed to delete task");
+      }
+      (document.getElementById("delete_modal") as HTMLDialogElement)?.close();
+    } catch (error: any) {
+      toast.error(error.message || "Error occurred while deleting");
+    }
+  };
   return (
     <>
       <div className="bg-white dark:bg-[#1f1f1f] rounded shadow p-4 flex flex-col justify-between h-full">
@@ -119,7 +138,7 @@ export default function TaskCard({ task }: { task: any }) {
           </div>
         )}
 
-        <div className="flex flex-col gap-2 w-full">
+        <div className="flex gap-2 w-full">
           {/* Add Subtask */}
           <Link
             href={`/dashboard/task/${task._id}`}
@@ -130,41 +149,38 @@ export default function TaskCard({ task }: { task: any }) {
             See Details
           </Link>
 
-          {/*
-          
-          <div className="flex justify-between">
+          {user?.role === "admin" && (
             <button
               onClick={() =>
                 (
-                  document.getElementById(
-                    "edit_task_modal"
-                  ) as HTMLDialogElement | null
+                  document.getElementById("delete_modal") as HTMLDialogElement
                 )?.showModal()
               }
-              className="btn btn-sm btn-outline flex items-center gap-2 text-blue-600 justify-start"
-            >
-              <MdOutlineEdit className="text-lg" />
-              Edit
-            </button>
-            
-
-            <EditTaskModal
-              task={selectedTask}
-              onSave={(updatedTask) => {
-                console.log("Updated Task:", updatedTask);
-                setSelectedTask(updatedTask);
-              }}
-            />
-
-            
-            <button
-              onClick={() => console.log("Delete clicked")}
               className="btn btn-sm btn-outline flex items-center gap-2 text-red-600 justify-start"
             >
               <BiTrash className="text-lg" />
               Delete
             </button>
-          </div> */}
+          )}
+
+          <dialog id="delete_modal" className="modal">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg text-red-600">Confirm Delete</h3>
+              <p className="py-4">Are you sure you want to delete this task?</p>
+              <div className="modal-action">
+                <form method="dialog" className="flex gap-2">
+                  <button className="btn btn-sm">Cancel</button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-error text-white"
+                    onClick={handleConfirmDelete}
+                  >
+                    Yes, Delete
+                  </button>
+                </form>
+              </div>
+            </div>
+          </dialog>
         </div>
       </div>
     </>

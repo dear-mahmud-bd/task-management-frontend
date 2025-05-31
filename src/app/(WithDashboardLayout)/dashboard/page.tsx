@@ -22,13 +22,15 @@ import {
 } from "@/constants";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/redux/hooks";
-import { useCurrentToken } from "@/redux/features/authSlice";
+import { selectCurrentUser, useCurrentToken } from "@/redux/features/authSlice";
 import { getDashboardStats } from "@/services/Task";
 import Loading from "@/components/Shared/Loading";
+import Link from "next/link";
 
 export default function Dashboard() {
   const [statistics, setStatistics] = useState<any>(null);
   const token = useAppSelector(useCurrentToken);
+  const currentUser = useAppSelector(selectCurrentUser);
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -42,7 +44,7 @@ export default function Dashboard() {
   }, [token]);
   if (!statistics) return <Loading />;
   console.log(statistics);
-  console.log(statistics?.users);
+  // console.log(statistics?.users);
 
   const stats = [
     {
@@ -139,7 +141,11 @@ export default function Dashboard() {
                           stageColor[task.stage as StageType] || "bg-gray-300"
                         }`}
                       />
-                      <span>{task.title}</span>
+                      <span>
+                        <Link href={`/dashboard/task/${task._id}`}>
+                          {task.title}
+                        </Link>
+                      </span>
                     </div>
                   </td>
                   <td className="py-2">
@@ -178,57 +184,62 @@ export default function Dashboard() {
         </div>
 
         {/* User Table */}
-        <div className="w-full md:w-1/3 bg-white shadow-md rounded p-4">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">
-            Recent Users
-          </h3>
-          <table className="w-full text-sm text-left">
-            <thead className="border-b border-gray-300 text-gray-600">
-              <tr>
-                <th className="py-2">Name</th>
-                <th className="py-2">Status</th>
-                <th className="py-2">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {statistics?.users.map((user: any, idx: number) => (
-                <tr
-                  key={idx}
-                  className="border-b border-gray-200 hover:bg-gray-100"
-                >
-                  <td className="py-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center text-xs">
-                        {user.name
-                          .split(" ")
-                          .map((n:any) => n[0])
-                          .join("")}
-                      </div>
-                      <div>
-                        <p>{user.name}</p>
-                        <span className="text-xs text-gray-500">
-                          {user.role}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-2">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs ${
-                        user.isActive
-                          ? "bg-green-100 text-green-600"
-                          : "bg-yellow-100 text-yellow-600"
-                      }`}
-                    >
-                      {user.isActive ? "Active" : "Disabled"}
-                    </span>
-                  </td>
-                  <td className="py-2 text-gray-500"> {format(new Date(user.createdAt), "PP")} </td>
+        {currentUser?.role === "admin" && (
+          <div className="w-full md:w-1/3 bg-white shadow-md rounded p-4">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">
+              Recent Users
+            </h3>
+            <table className="w-full text-sm text-left">
+              <thead className="border-b border-gray-300 text-gray-600">
+                <tr>
+                  <th className="py-2">Name</th>
+                  <th className="py-2">Status</th>
+                  <th className="py-2">Joined</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {statistics?.users.map((user: any, idx: number) => (
+                  <tr
+                    key={idx}
+                    className="border-b border-gray-200 hover:bg-gray-100"
+                  >
+                    <td className="py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center text-xs">
+                          {user.name
+                            .split(" ")
+                            .map((n: any) => n[0])
+                            .join("")}
+                        </div>
+                        <div>
+                          <p>{user.name}</p>
+                          <span className="text-xs text-gray-500">
+                            {user.role}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs ${
+                          user.isActive
+                            ? "bg-green-100 text-green-600"
+                            : "bg-yellow-100 text-yellow-600"
+                        }`}
+                      >
+                        {user.isActive ? "Active" : "Disabled"}
+                      </span>
+                    </td>
+                    <td className="py-2 text-gray-500">
+                      {" "}
+                      {format(new Date(user.createdAt), "PP")}{" "}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,16 +1,26 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { protectedRoutes } from "@/constants";
 import { useUser } from "@/context/UserContext";
-import { selectCurrentUser, signOut } from "@/redux/features/authSlice";
+import {
+  selectCurrentUser,
+  signOut,
+  useCurrentToken,
+} from "@/redux/features/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { logoutUser } from "@/services/AuthService";
+import {
+  getUserNotifications,
+  logoutUser,
+  markNotificationAsRead,
+} from "@/services/AuthService";
 import { getInitials } from "@/utils";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import moment from "moment";
+import NotificationModal from "./NotificationModal";
 
 const mockNotifications = [
   {
@@ -35,24 +45,37 @@ const mockNotifications = [
     read: true,
   },
 ];
+
 const Navbar = () => {
+  const token = useAppSelector(useCurrentToken);
+  const savedUser = useAppSelector(selectCurrentUser);
   const { user, setIsLoading } = useUser();
   // console.log(user);
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const savedUser = useAppSelector(selectCurrentUser);
   // console.log(savedUser.name);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [selectedNotification, setSelectedNotification] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAllRead = () => {
-    setNotifications((prev) =>
-      prev.map((n) => ({ ...n, read: true }))
-    );
-  };
+  // add notification server functionality
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!token) return;
+      const res = await getUserNotifications(token);
+      if (Array.isArray(res)) {
+        setNotifications(res);
+      }
+    };
+    fetchNotifications();
+  }, [token]);
+
+  console.log(notifications);
 
   const handleLogOut = () => {
     dispatch(signOut());
@@ -62,6 +85,42 @@ const Navbar = () => {
       router.push("/");
     }
     router.push("/");
+  };
+
+  // ✅ Mark all as read
+  const markAllRead = async () => {
+    if (!token) return;
+    const res = await markNotificationAsRead(token, "all");
+    if (res?.status) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    }
+  };
+
+  // ✅ Mark one as read
+  const markOneAsRead = async (id: string) => {
+    if (!token) return;
+
+    // Skip if already read
+    const target = notifications.find((n) => n._id === id);
+    if (!target || target.read) return;
+
+    const res = await markNotificationAsRead(token, "single", id);
+    if (res?.status) {
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+      );
+    }
+  };
+
+  const handleNotificationClick = (n: any) => {
+    if (!n.read) {
+      markOneAsRead(n._id);
+      setSelectedNotification(n);
+      setIsModalOpen(true);
+    } else {
+      setSelectedNotification(n);
+      setIsModalOpen(true);
+    }
   };
 
   return (
@@ -133,8 +192,9 @@ const Navbar = () => {
                     {notifications.length > 0 ? (
                       notifications.map((n) => (
                         <li
-                          key={n.id}
-                          className={`p-3 rounded-lg ${
+                          key={n._id}
+                          onClick={() => handleNotificationClick(n)}
+                          className={`p-3 rounded-lg cursor-pointer transition ${
                             !n.read
                               ? "bg-info bg-opacity-10"
                               : "hover:bg-base-200"
@@ -153,15 +213,15 @@ const Navbar = () => {
                       ))
                     ) : (
                       <p className="text-center text-sm text-gray-500">
-                        No notifications
+                        No new notifications
                       </p>
                     )}
                   </ul>
-                  <div className="card-actions mt-3">
-                    <button className="btn btn-primary btn-block">
-                      View all
-                    </button>
-                  </div>
+                  <NotificationModal
+                    notification={selectedNotification}
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                  />
                 </div>
               </div>
             </div>

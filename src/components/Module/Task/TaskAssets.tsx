@@ -14,7 +14,7 @@ interface TaskAssetsProps {
 }
 
 const TaskAssets: React.FC<TaskAssetsProps> = ({ activities = 0, assets = 0, subTasks = [] }) => {
-  console.log(subTasks);
+  // console.log(subTasks);
   
   return (
     <div className="flex items-center gap-3">

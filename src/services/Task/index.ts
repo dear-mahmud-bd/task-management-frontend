@@ -214,3 +214,27 @@ export const updateTaskStage = async (
     };
   }
 };
+
+export const trashTask = async (taskId: string, token: string) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/task/trash/${taskId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    console.error("Trash task error:", error);
+    return {
+      status: false,
+      message: (error as Error).message || "Something went wrong",
+    };
+  }
+};

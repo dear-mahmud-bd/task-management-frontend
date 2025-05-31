@@ -145,6 +145,8 @@ export default function TasksPage() {
                 className="input input-bordered w-full"
               />
             </div>
+
+            {/* Description */}
             <div>
               <label className="label">
                 <span className="label-text">Description</span>
@@ -156,6 +158,8 @@ export default function TasksPage() {
                 rows={2}
               ></textarea>
             </div>
+
+            {/* Team */}
             <div>
               <label className="label">
                 <span className="label-text">Team</span>
@@ -174,7 +178,8 @@ export default function TasksPage() {
                 className="text-black"
               />
             </div>
-
+            
+            {/* data and priority */}
             <div className="flex flex-col md:flex-row gap-4">
               <div className="w-full md:w-1/2">
                 <label className="label">
@@ -203,17 +208,19 @@ export default function TasksPage() {
               </div>
             </div>
 
+            {/* Links */}
             <div>
               <label className="label">
                 <span className="label-text">Important Links</span>
               </label>
               <textarea
                 {...register("links")}
-                rows={3}
+                rows={2}
                 placeholder="Support Links (comma separated)"
-                className="input input-bordered w-full"
+                className="textarea textarea-bordered w-full"
               />
             </div>
+
             <div className="modal-action">
               <button
                 type="button"

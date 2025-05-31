@@ -14,7 +14,7 @@ import TeamSection from "@/components/Module/TaskDetails/TeamSection";
 import { useParams } from "next/navigation";
 import { getSingleTask } from "@/services/Task";
 import { useAppSelector } from "@/redux/hooks";
-import { useCurrentToken } from "@/redux/features/authSlice";
+import { selectCurrentUser, useCurrentToken } from "@/redux/features/authSlice";
 import Loading from "@/components/Shared/Loading";
 import { MdOutlineEdit } from "react-icons/md";
 import EditTaskModal from "@/components/Module/Task/EditTaskModal";
@@ -34,6 +34,7 @@ const TaskDetailsPage = () => {
   const [isSubTaskModalOpen, setIsSubTaskModalOpen] = useState(false);
 
   const token = useAppSelector(useCurrentToken);
+  const currentUser = useAppSelector(selectCurrentUser);
   const [selected, setSelected] = useState(0);
   const [task, setTask] = useState<any>(null);
   const [selectedTask, setSelectedTask] = useState<any>(null);
@@ -68,17 +69,21 @@ const TaskDetailsPage = () => {
             <FaPlus className="text-sm" />
             Subtask
           </button>
-          <button
-            onClick={() =>
-              (
-                document.getElementById("edit_task_modal") as HTMLDialogElement
-              )?.showModal()
-            }
-            className="btn btn-sm btn-outline flex items-center gap-2 text-blue-600"
-          >
-            <MdOutlineEdit className="text-lg" />
-            Edit
-          </button>
+          {currentUser?.role === "admin" && (
+            <button
+              onClick={() =>
+                (
+                  document.getElementById(
+                    "edit_task_modal"
+                  ) as HTMLDialogElement
+                )?.showModal()
+              }
+              className="btn btn-sm btn-outline flex items-center gap-2 text-blue-600"
+            >
+              <MdOutlineEdit className="text-lg" />
+              Edit
+            </button>
+          )}
         </div>
       </div>
 
@@ -90,7 +95,7 @@ const TaskDetailsPage = () => {
             <TaskHeader task={task} />
             <TaskStats task={task} />
             <TeamSection team={task?.team} />
-            <SubTasks  subTasks={task?.subTasks} taskId={task?._id} />
+            <SubTasks subTasks={task?.subTasks} taskId={task?._id} />
           </div>
           <div className="space-y-6">
             <TaskDescription description={task?.description} />
@@ -113,7 +118,7 @@ const TaskDetailsPage = () => {
       <SubTaskModal
         open={isSubTaskModalOpen}
         setOpen={setIsSubTaskModalOpen}
-        taskId={task._id} 
+        taskId={task._id}
         onSubmit={(newSubtask) => {
           setTask((prev: any) => ({
             ...prev,

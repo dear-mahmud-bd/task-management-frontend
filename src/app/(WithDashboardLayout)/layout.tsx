@@ -5,8 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import clsx from "clsx";
+import { useAppSelector } from "@/redux/hooks";
+import { selectCurrentUser } from "@/redux/features/authSlice";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+  const currentUser = useAppSelector(selectCurrentUser);
   const pathname = usePathname();
   return (
     <div className="container max-w-full mx-auto">
@@ -50,16 +53,18 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 Team
               </Link>
             </li>
-            <li>
-              <Link
-                href="/dashboard/trash"
-                className={clsx({
-                  "bg-primary text-white": pathname === "/dashboard/trash",
-                })}
-              >
-                Trash
-              </Link>
-            </li>
+            {currentUser?.role === "admin" && (
+              <li>
+                <Link
+                  href="/dashboard/trash"
+                  className={clsx({
+                    "bg-primary text-white": pathname === "/dashboard/trash",
+                  })}
+                >
+                  Trash
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       </div>
